@@ -283,3 +283,52 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+
+/* Sidebar - File Browser */
+.sidebar {
+  width: 320px;
+  background: white;
+  border-right: 3px solid #e9ecef;
+  padding: 0;
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+  box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+}
+
+.sidebar-title {
+  margin: 0;
+  color: #495057;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e9ecef;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.file-tree {
+  font-size: 0.9rem;
+  padding: 1rem;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  background: #fafbfc;
+  padding: 2rem;
+  overflow-y: auto;
+  min-height: calc(100vh - 120px);
+}
+
+/* App Body Layout */
+.app-body {
+  display: flex;
+  flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 0;
+  min-height: calc(100vh - 120px);
+}
