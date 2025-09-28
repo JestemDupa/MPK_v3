@@ -422,15 +422,33 @@ function App() {
       <header className="app-header">
         <div className="header-content">
           <h1 className="app-title">📚 Document Search</h1>
-          <div className="header-stats">
-            {stats && (
-              <>
-                <span>{stats.total_documents} documents indexed</span>
-                <button className="rescan-btn" onClick={triggerRescan}>
-                  🔄 Rescan
+          
+          <div className="header-right">
+            <form onSubmit={handleSearch} className="header-search-form">
+              <div className="header-search-container">
+                <input
+                  type="text"
+                  placeholder="Search documents..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="header-search-input"
+                />
+                <button type="submit" className="header-search-button" disabled={isSearching}>
+                  {isSearching ? '⏳' : '🔍'}
                 </button>
-              </>
-            )}
+              </div>
+            </form>
+            
+            <div className="header-stats">
+              {stats && (
+                <>
+                  <span>{stats.total_documents} documents indexed</span>
+                  <button className="rescan-btn" onClick={triggerRescan}>
+                    🔄 Rescan
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
