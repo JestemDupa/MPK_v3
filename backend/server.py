@@ -362,6 +362,40 @@ async def get_document(doc_id: str):
     
     return DocumentFile(**doc)
 
+@api_router.get("/documents/{doc_id}/download")
+async def download_document(doc_id: str):
+    """Download a specific document"""
+    doc = await db.documents.find_one({"id": doc_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    file_path = Path(doc['path'])
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    
+    return FileResponse(
+        path=str(file_path),
+        filename=doc['name'],
+        media_type='application/octet-stream'
+    )
+
+@api_router.get("/documents/path/{path:path}")
+async def get_document_by_path(path: str):
+    """Get a document by its relative path"""
+    doc = await db.documents.find_one({"relative_path": path})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Parse datetime strings
+    if isinstance(doc.get('created_at'), str):
+        doc['created_at'] = datetime.fromisoformat(doc['created_at'])
+    if isinstance(doc.get('updated_at'), str):
+        doc['updated_at'] = datetime.fromisoformat(doc['updated_at'])
+    if isinstance(doc.get('indexed_at'), str):
+        doc['indexed_at'] = datetime.fromisoformat(doc['indexed_at'])
+    
+    return DocumentFile(**doc)
+
 @api_router.get("/stats")
 async def get_stats():
     """Get indexing statistics"""
