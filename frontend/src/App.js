@@ -109,45 +109,68 @@ const SearchResult = ({ result, onResultClick, onDownloadClick }) => {
   );
 };
 
-// Document Preview Modal
-const DocumentPreview = ({ document, onClose }) => {
-  if (!document) return null;
+// Document Preview Component (for main content area)
+const DocumentPreviewMain = ({ document, onClose }) => {
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
-  const renderThumbnail = () => {
-    if (!document.thumbnail) return null;
-    
-    if (document.thumbnail.startsWith('data:text/plain')) {
-      const content = atob(document.thumbnail.split(',')[1]);
-      return (
-        <div className="text-preview">
-          <pre>{content}</pre>
-        </div>
-      );
+  const renderContent = () => {
+    if (!document.content) {
+      return <p className="no-content">No content available for preview</p>;
     }
-    
-    return null;
+
+    // For text content, show formatted preview
+    return (
+      <div className="document-content">
+        <pre>{document.content}</pre>
+      </div>
+    );
+  };
+
+  const handleDownload = () => {
+    window.open(`${API}/documents/${document.id}/download`, '_blank');
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{document.name}</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+    <div className="document-preview-main">
+      <div className="document-header">
+        <div className="document-title-section">
+          <h2 className="document-title">{document.name}</h2>
+          <button className="close-preview-btn" onClick={onClose} title="Close Preview">
+            ✕
+          </button>
         </div>
         
-        <div className="modal-body">
-          <div className="document-info">
-            <p><strong>Path:</strong> {document.relative_path}</p>
-            <p><strong>Type:</strong> {document.file_type}</p>
-            <p><strong>Size:</strong> {(document.size / 1024).toFixed(2)} KB</p>
-            <p><strong>Last Modified:</strong> {new Date(document.updated_at).toLocaleString()}</p>
-          </div>
-          
-          <div className="document-preview">
-            {renderThumbnail()}
-          </div>
+        <div className="document-actions">
+          <button className="action-btn download-btn" onClick={handleDownload}>
+            📥 Download
+          </button>
         </div>
+      </div>
+
+      <div className="document-details">
+        <div className="detail-item">
+          <strong>Path:</strong> {document.relative_path}
+        </div>
+        <div className="detail-item">
+          <strong>Type:</strong> {document.file_type}
+        </div>
+        <div className="detail-item">
+          <strong>Size:</strong> {formatFileSize(document.size)}
+        </div>
+        <div className="detail-item">
+          <strong>Last Modified:</strong> {new Date(document.updated_at).toLocaleString()}
+        </div>
+      </div>
+
+      <div className="document-content-section">
+        <h3>Document Preview</h3>
+        {renderContent()}
       </div>
     </div>
   );
