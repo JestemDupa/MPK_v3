@@ -6,12 +6,13 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // File Tree Component
-const FileTreeNode = ({ node, onFileSelect }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const FileTreeNode = ({ node, onFileSelect, selectedFilePath, expandedPaths, onToggleExpanded }) => {
+  const isSelected = selectedFilePath === node.path;
+  const isExpanded = expandedPaths.has(node.path);
   
   const handleClick = () => {
     if (node.type === 'folder') {
-      setIsExpanded(!isExpanded);
+      onToggleExpanded(node.path);
     } else {
       onFileSelect(node);
     }
@@ -37,7 +38,7 @@ const FileTreeNode = ({ node, onFileSelect }) => {
   return (
     <div className="file-tree-node">
       <div 
-        className={`file-tree-item ${node.type === 'file' ? 'file' : 'folder'}`}
+        className={`file-tree-item ${node.type === 'file' ? 'file' : 'folder'} ${isSelected ? 'selected' : ''}`}
         onClick={handleClick}
       >
         <span className="file-icon">{getIcon()}</span>
@@ -51,6 +52,9 @@ const FileTreeNode = ({ node, onFileSelect }) => {
               key={index} 
               node={child} 
               onFileSelect={onFileSelect}
+              selectedFilePath={selectedFilePath}
+              expandedPaths={expandedPaths}
+              onToggleExpanded={onToggleExpanded}
             />
           ))}
         </div>
