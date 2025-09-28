@@ -64,7 +64,7 @@ const FileTreeNode = ({ node, onFileSelect, selectedFilePath, expandedPaths, onT
 };
 
 // Search Result Component
-const SearchResult = ({ result, onResultClick }) => {
+const SearchResult = ({ result, onResultClick, onDownloadClick }) => {
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -73,11 +73,25 @@ const SearchResult = ({ result, onResultClick }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const handleResultClick = () => {
+    onResultClick(result);
+  };
+
+  const handleDownloadClick = (e) => {
+    e.stopPropagation(); // Prevent triggering the result click
+    onDownloadClick(result.document);
+  };
+
   return (
-    <div className="search-result" onClick={() => onResultClick(result)}>
+    <div className="search-result" onClick={handleResultClick}>
       <div className="result-header">
         <h3 className="result-title">{result.document.name}</h3>
-        <span className="result-score">Score: {result.relevance_score.toFixed(2)}</span>
+        <div className="result-actions">
+          <span className="result-score">Score: {result.relevance_score.toFixed(2)}</span>
+          <button className="download-btn" onClick={handleDownloadClick} title="Download">
+            📥
+          </button>
+        </div>
       </div>
       
       <div className="result-path">{result.document.relative_path}</div>
