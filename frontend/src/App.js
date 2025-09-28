@@ -184,6 +184,9 @@ function App() {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedFilePath, setSelectedFilePath] = useState('');
+  const [expandedPaths, setExpandedPaths] = useState(new Set());
+  const [previewDocument, setPreviewDocument] = useState(null);
 
   // Load initial data
   useEffect(() => {
@@ -213,6 +216,16 @@ function App() {
     }
   };
 
+  const loadDocumentByPath = async (relativePath) => {
+    try {
+      const response = await axios.get(`${API}/documents/path/${encodeURIComponent(relativePath)}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error loading document:', error);
+      return null;
+    }
+  };
+
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) {
@@ -236,13 +249,49 @@ function App() {
     }
   };
 
-  const handleFileSelect = (fileNode) => {
-    // In a real implementation, you might want to load the file details
-    console.log('File selected:', fileNode);
+  const handleFileSelect = async (fileNode) => {
+    // Highlight the selected file
+    setSelectedFilePath(fileNode.path);
+    
+    // Load and preview the document
+    const relativePath = fileNode.path.replace('/var/www/html/MPK/doc/', '');
+    const document = await loadDocumentByPath(relativePath);
+    if (document) {
+      setPreviewDocument(document);
+    }
   };
 
-  const handleResultClick = (result) => {
-    setSelectedDocument(result.document);
+  const handleResultClick = async (result) => {
+    // Highlight the file in the tree
+    setSelectedFilePath(result.document.path);
+    
+    // Expand parent folders to show the file
+    const pathParts = result.document.path.split('/');
+    const newExpandedPaths = new Set(expandedPaths);
+    
+    let currentPath = '';
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      currentPath += (currentPath ? '/' : '') + pathParts[i];
+      newExpandedPaths.add(currentPath);
+    }
+    setExpandedPaths(newExpandedPaths);
+
+    // Show document preview in main area
+    setPreviewDocument(result.document);
+  };
+
+  const handleDownload = (document) => {
+    window.open(`${API}/documents/${document.id}/download`, '_blank');
+  };
+
+  const handleToggleExpanded = (path) => {
+    const newExpandedPaths = new Set(expandedPaths);
+    if (newExpandedPaths.has(path)) {
+      newExpandedPaths.delete(path);
+    } else {
+      newExpandedPaths.add(path);
+    }
+    setExpandedPaths(newExpandedPaths);
   };
 
   const triggerRescan = async () => {
@@ -265,6 +314,66 @@ function App() {
       </div>
     );
   }
+
+  const renderMainContent = () => {
+    if (previewDocument) {
+      return (
+        <DocumentPreviewMain
+          document={previewDocument}
+          onClose={() => setPreviewDocument(null)}
+        />
+      );
+    }
+
+    // Show search results or welcome message
+    if (isSearching) {
+      return (
+        <div className="search-loading">
+          <div className="loading-spinner"></div>
+          <p>Searching...</p>
+        </div>
+      );
+    } else if (searchResults.length > 0) {
+      return (
+        <div className="results-container">
+          <h3 className="results-header">
+            Found {searchResults.length} results for "{searchQuery}"
+          </h3>
+          {searchResults.map((result, index) => (
+            <SearchResult
+              key={index}
+              result={result}
+              onResultClick={handleResultClick}
+              onDownloadClick={handleDownload}
+            />
+          ))}
+        </div>
+      );
+    } else if (searchQuery) {
+      return (
+        <div className="no-results">
+          <p>No documents found for "{searchQuery}"</p>
+          <p>Try different keywords or check if documents are indexed.</p>
+        </div>
+      );
+    } else {
+      return (
+        <div className="welcome-message">
+          <h2>Welcome to Document Search</h2>
+          <p>Start typing to search through your indexed documents, or click on a file in the browser to preview it.</p>
+          <div className="search-tips">
+            <h4>Usage Tips:</h4>
+            <ul>
+              <li>Use the search bar for full-text search across all documents</li>
+              <li>Click on files in the left sidebar to preview them</li>
+              <li>Click on search results to view and download documents</li>
+              <li>Use the rescan button to refresh the file index</li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+  };
 
   return (
     <div className="app">
@@ -293,6 +402,9 @@ function App() {
               <FileTreeNode 
                 node={fileTree} 
                 onFileSelect={handleFileSelect}
+                selectedFilePath={selectedFilePath}
+                expandedPaths={expandedPaths}
+                onToggleExpanded={handleToggleExpanded}
               />
             ) : (
               <p>No files found</p>
@@ -300,7 +412,7 @@ function App() {
           </div>
         </div>
 
-        {/* Main Content - Search */}
+        {/* Main Content - Search or Preview */}
         <div className="main-content">
           <div className="search-section">
             <form onSubmit={handleSearch} className="search-form">
@@ -319,51 +431,15 @@ function App() {
             </form>
 
             <div className="search-results">
-              {isSearching ? (
-                <div className="search-loading">
-                  <div className="loading-spinner"></div>
-                  <p>Searching...</p>
-                </div>
-              ) : searchResults.length > 0 ? (
-                <div className="results-container">
-                  <h3 className="results-header">
-                    Found {searchResults.length} results for "{searchQuery}"
-                  </h3>
-                  {searchResults.map((result, index) => (
-                    <SearchResult
-                      key={index}
-                      result={result}
-                      onResultClick={handleResultClick}
-                    />
-                  ))}
-                </div>
-              ) : searchQuery ? (
-                <div className="no-results">
-                  <p>No documents found for "{searchQuery}"</p>
-                  <p>Try different keywords or check if documents are indexed.</p>
-                </div>
-              ) : (
-                <div className="welcome-message">
-                  <h2>Welcome to Document Search</h2>
-                  <p>Start typing to search through your indexed documents.</p>
-                  <div className="search-tips">
-                    <h4>Search Tips:</h4>
-                    <ul>
-                      <li>Use specific keywords from document content</li>
-                      <li>Search works across PDF, DOCX, Excel, and text files</li>
-                      <li>Results are ranked by relevance</li>
-                    </ul>
-                  </div>
-                </div>
-              )}
+              {renderMainContent()}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Document Preview Modal */}
+      {/* Document Preview Modal (if needed for full-screen view) */}
       {selectedDocument && (
-        <DocumentPreview
+        <DocumentPreviewModal
           document={selectedDocument}
           onClose={() => setSelectedDocument(null)}
         />
