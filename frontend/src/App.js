@@ -176,6 +176,48 @@ const DocumentPreviewMain = ({ document, onClose }) => {
   );
 };
 
+// Document Preview Modal (for full-screen view)
+const DocumentPreviewModal = ({ document, onClose }) => {
+  if (!document) return null;
+
+  const handleDownload = () => {
+    window.open(`${API}/documents/${document.id}/download`, '_blank');
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{document.name}</h2>
+          <div className="modal-actions">
+            <button className="action-btn download-btn" onClick={handleDownload}>
+              📥 Download
+            </button>
+            <button className="modal-close" onClick={onClose}>×</button>
+          </div>
+        </div>
+        
+        <div className="modal-body">
+          <div className="document-info">
+            <p><strong>Path:</strong> {document.relative_path}</p>
+            <p><strong>Type:</strong> {document.file_type}</p>
+            <p><strong>Size:</strong> {(document.size / 1024).toFixed(2)} KB</p>
+            <p><strong>Last Modified:</strong> {new Date(document.updated_at).toLocaleString()}</p>
+          </div>
+          
+          <div className="document-preview">
+            {document.content && (
+              <div className="text-preview">
+                <pre>{document.content}</pre>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [fileTree, setFileTree] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
