@@ -474,25 +474,8 @@ function App() {
 
         {/* Main Content - Search or Preview */}
         <div className="main-content">
-          <div className="search-section">
-            <form onSubmit={handleSearch} className="search-form">
-              <div className="search-input-container">
-                <input
-                  type="text"
-                  placeholder="Search documents..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input"
-                />
-                <button type="submit" className="search-button" disabled={isSearching}>
-                  {isSearching ? '⏳' : '🔍'}
-                </button>
-              </div>
-            </form>
-
-            <div className="search-results">
-              {renderMainContent()}
-            </div>
+          <div className="search-results">
+            {renderMainContent()}
           </div>
         </div>
       </div>
